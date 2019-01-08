@@ -1,39 +1,40 @@
 'use strict';
 
-function initializeCard(prefix, baseUrl, myHeaders) {
+function initializeCard(tools) {
   function Card(id, name) {
     var self = this;
 
     this.id = id;
     this.name = name || 'No name given';
-    this.element = generateTemplate('card-template', {
+    this.tools = tools;
+
+    this.element = tools.generateTemplate('card-template', {
       description: this.name
     }, 'li');
 
+    function handleDeleteCard() {
+      self.tools.fetch('/card/' + self.id, {
+          method: 'DELETE',
+        })
+        .then(function (resp) {
+          self.removeCard();
+        })
+    }
+
     this.element.querySelector('.card').addEventListener('click', function (event) {
-      event.stopPropagation();
 
       if (event.target.classList.contains('btn-delete')) {
-        self.removeCard();
+        event.stopPropagation();
+        handleDeleteCard();
       }
     });
   }
+
   Card.prototype = {
-
     removeCard: function () {
-      var self = this;
-
-      fetch(prefix + baseUrl + '/card/' + self.id, {
-          method: 'DELETE',
-          headers: myHeaders
-        })
-        .then(function (resp) {
-          return resp.json();
-        })
-        .then(function (resp) {
-          self.element.parentNode.removeChild(self.element);
-        })
+      this.element.parentNode.removeChild(this.element);
     }
   };
   return Card;
 }
+
