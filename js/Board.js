@@ -1,42 +1,49 @@
 'use strict';
 
-function initializeBoard(prefix, baseUrl, myHeaders) {
-    const Column = initializeColumn(prefix, baseUrl, myHeaders);
-    var board = {
+function initializeBoard(tools) {
+    const Column = initializeColumn(tools);
+
+    const board = {
         name: 'Kanban Board',
-        addColumn: function (column) {
+        element: document.querySelector('#board .column-container'),
+
+        addColumn: function (id, name) {
+            const column = new Column(id, name);
+
             this.element.appendChild(column.element);
+
             initSortable(column.id);
+
+            return column;
         },
-        element: document.querySelector('#board .column-container')
     };
 
     function initSortable(id) {
-        var el = document.getElementById(id);
-        var sortable = Sortable.create(el, {
+        const el = document.getElementById(id);
+        const sortable = Sortable.create(el, {
             group: 'kanban',
             sort: true,
         });
     }
 
-    document.querySelector('#board .create-column').addEventListener('click', function () {
-        var name = prompt('Enter a column name');
-        var data = new FormData();
-
+    function handleAddColumn() {
+        const name = prompt('Enter a column name');
+        const data = new FormData();
         data.append('name', name);
 
-        fetch(prefix + baseUrl + '/column', {
+        tools.fetch('/column', {
                 method: 'POST',
-                headers: myHeaders,
                 body: data,
             })
             .then(function (resp) {
-                return resp.json();
-            })
-            .then(function (resp) {
-                var column = new Column(resp.id, name);
-                board.addColumn(column);
+                board.addColumn(resp.id, name);
             });
-    });
+    }
+
+    document
+        .querySelector('#board .create-column')
+        .addEventListener('click', handleAddColumn);
+
     return board;
 }
+
